@@ -33,74 +33,73 @@ namespace MultipleSign.Sign
         {
             task.IsCompleted = false;
 
-            if (task.Parameter is string cookie)
+            if (task.Parameter is not string cookie)
             {
-                var content = await SignV1(cookie);
-                if (content.Contains("操作存在风险") && content.Contains("encryptedSign"))
+                task.Message = "Parameter参数映射对象失败";
+                return;
+            }
+
+            var content = await SignV1(cookie);
+            if (content.Contains("操作存在风险") && content.Contains("encryptedSign"))
+            {
+                string sign = string.Empty;
+                string pattern = @"var sign = ""([a-f0-9]+)"";";
+                var matches = Regex.Matches(content, pattern);
+                foreach (Match match in matches)
                 {
-                    string sign = string.Empty;
-                    string pattern = @"var sign = ""([a-f0-9]+)"";";
-                    var matches = Regex.Matches(content, pattern);
-                    foreach (Match match in matches)
+                    if (match.Groups.Count > 1)
                     {
-                        if (match.Groups.Count > 1)
-                        {
-                            sign = match.Groups[1].Value;
-                            break;
-                        }
-                    }
-
-                    if (string.IsNullOrWhiteSpace(sign) == false)
-                    {
-                        await Task.Delay(3000);
-
-                        content = await SignV2(cookie, sign);
-
-                        task.IsCompleted = true;
-                        task.Message = GetMessage(content);
-                    }
-                    else
-                    {
-                        task.Message = "未签到，操作存在风险且未能解析出sign";
+                        sign = match.Groups[1].Value;
+                        break;
                     }
                 }
-                else if (content.Contains("操作存在风险，请稍后重试。") && content.Contains("$.xpost(xn.url('sg_sign'), {'sign':  sign}"))
+
+                if (string.IsNullOrWhiteSpace(sign) == false)
                 {
-                    string sign = string.Empty;
-                    string pattern = @"var sign = ""([a-f0-9]+)"";";
-                    var matches = Regex.Matches(content, pattern);
-                    foreach (Match match in matches)
-                    {
-                        if (match.Groups.Count > 1)
-                        {
-                            sign = match.Groups[1].Value;
-                            break;
-                        }
-                    }
+                    await Task.Delay(3000);
 
-                    if (string.IsNullOrWhiteSpace(sign) == false)
-                    {
-                        await Task.Delay(3000);
+                    content = await SignV2(cookie, sign);
 
-                        content = await SignV3(cookie, sign);
-
-                        task.IsCompleted = true;
-                        task.Message = GetMessage(content);
-                    }
-                    else
-                    {
-                        task.Message = "未签到，操作存在风险且未能解析出sign";
-                    }
+                    task.IsCompleted = true;
+                    task.Message = GetMessage(content);
                 }
                 else
                 {
+                    task.Message = "未签到，操作存在风险且未能解析出sign";
+                }
+            }
+            else if (content.Contains("操作存在风险，请稍后重试。") && content.Contains("$.xpost(xn.url('sg_sign'), {'sign':  sign}"))
+            {
+                string sign = string.Empty;
+                string pattern = @"var sign = ""([a-f0-9]+)"";";
+                var matches = Regex.Matches(content, pattern);
+                foreach (Match match in matches)
+                {
+                    if (match.Groups.Count > 1)
+                    {
+                        sign = match.Groups[1].Value;
+                        break;
+                    }
+                }
+
+                if (string.IsNullOrWhiteSpace(sign) == false)
+                {
+                    await Task.Delay(3000);
+
+                    content = await SignV3(cookie, sign);
+
                     task.IsCompleted = true;
                     task.Message = GetMessage(content);
+                }
+                else
+                {
+                    task.Message = "未签到，操作存在风险且未能解析出sign";
                 }
             }
             else
             {
-                task.Message = "参数错误";
+                task.IsCompleted = true;
+                task.Message = GetMessage(content);
             }
         }
 

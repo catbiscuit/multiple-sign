@@ -32,69 +32,68 @@ namespace MultipleSign.Sign
         {
             task.IsCompleted = false;
 
-            if (task.Parameter is string token)
+            if (task.Parameter is not string token)
             {
-                string[] parts = token.Split('.');
-                if (parts.Length != 3)
-                {
-                    task.Message = "JWT 格式错误";
-                    return;
-                }
+                task.Message = "Parameter参数映射对象失败";
+                return;
+            }
 
-                var payloadJson = DecodeBase64Url(parts[1]);
-                JsonObject payloadData = payloadJson.TryToObject<JsonObject>();
-                var expValue = payloadData["exp"];
+            string[] parts = token.Split('.');
+            if (parts.Length != 3)
+            {
+                task.Message = "JWT 格式错误";
+                return;
+            }
 
-                if (expValue == null)
-                {
-                    task.Message = "JWT的exp不存在";
-                    return;
-                }
+            var payloadJson = DecodeBase64Url(parts[1]);
+            JsonObject payloadData = payloadJson.TryToObject<JsonObject>();
+            var expValue = payloadData["exp"];
 
-                if (((long)expValue) <= Util.GetTimeStamp_Seconds())
-                {
-                    task.Message = "请重新登录并更新Github中token的值！";
-                    return;
-                }
+            if (expValue == null)
+            {
+                task.Message = "JWT的exp不存在";
+                return;
+            }
 
-                var url = "https://link-ai.tech/api/chat/web/app/user/sign/in";
-                Dictionary<string, string> headers = new()
-                {
-                    { "Authorization", "Bearer " + token },
-                    { "User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36" },
-                    { "X-Forwarded-For", Util.GetFakeIP() },
-                };
-                var client = new RestClient(url);
-                RestRequest request = new() { Method = Method.Get };
-                request.AddOrUpdateHeaders(headers);
-                RestResponse response = await client.ExecuteAsync(request);
-                if (response.Content.Contains("今日已签到"))
-                {
-                    task.IsCompleted = true;
-                    task.Message = "今日已签到，请明日再来！";
-                }
-                else if (response.Content.Contains("success"))
-                {
-                    task.IsCompleted = true;
-                    task.Message = "签到成功！";
-                }
-                else if (response.Content.Contains("401"))
-                {
-                    task.IsCompleted = false;
-                    task.Message = "jwt校验失败，请检查！";
-                }
-                else
-                {
-                    task.IsCompleted = false;
-                    if (response.Content.Length > 50)
-                        task.Message = response.Content[..50];
-                    else
-                        task.Message = "参数错误";
-                }
+            if (((long)expValue) <= Util.GetTimeStamp_Seconds())
+            {
+                task.Message = "请重新登录并更新Github中token的值！";
+                return;
+            }
+
+            var url = "https://link-ai.tech/api/chat/web/app/user/sign/in";
+            Dictionary<string, string> headers = new()
+            {
+                { "Authorization", "Bearer " + token },
+                { "User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36" },
+                { "X-Forwarded-For", Util.GetFakeIP() },
+            };
+            var client = new RestClient(url);
+            RestRequest request = new() { Method = Method.Get };
+            request.AddOrUpdateHeaders(headers);
+            RestResponse response = await client.ExecuteAsync(request);
+            if (response.Content.Contains("今日已签到"))
+            {
+                task.IsCompleted = true;
+                task.Message = "今日已签到，请明日再来！";
+            }
+            else if (response.Content.Contains("success"))
+            {
+                task.IsCompleted = true;
+                task.Message = "签到成功！";
+            }
+            else if (response.Content.Contains("401"))
+            {
+                task.IsCompleted = false;
+                task.Message = "jwt校验失败，请检查！";
             }
             else
             {
-                task.Message = "参数错误";
+                task.IsCompleted = false;
+                if (response.Content.Length > 50)
+                    task.Message = response.Content[..50];
+                else
+                    task.Message = "参数错误";
             }
         }
 

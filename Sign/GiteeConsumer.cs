@@ -1,4 +1,5 @@
 ﻿using RestSharp;
+using System.Reflection.Metadata;
 using System.Text;
 using System.Text.Json;
 using System.Text.Json.Nodes;
@@ -33,16 +34,15 @@ namespace MultipleSign.Sign
         {
             task.IsCompleted = false;
 
-            if (task.Parameter is GiteeConfModel giteeConfModel)
+            if (task.Parameter is not GiteeConfModel giteeConfModel)
             {
-                var msg = await DoSign(giteeConfModel);
-                task.IsCompleted = true;
-                task.Message = msg;
+                task.Message = "Parameter参数映射对象失败";
+                return;
             }
-            else
-            {
-                task.Message = "参数错误";
-            }
+
+            var msg = await DoSign(giteeConfModel);
+            task.IsCompleted = true;
+            task.Message = msg;
         }
 
         private async Task<string> DoSign(GiteeConfModel giteeConfModel)

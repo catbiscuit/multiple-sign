@@ -53,16 +53,15 @@ namespace MultipleSign.Sign
         {
             task.IsCompleted = false;
 
-            if (task.Parameter is JiChangDomainAccount jiChangDomainAccount)
+            if (task.Parameter is not JiChangDomainAccount jiChangDomainAccount)
             {
-                var msg = await DoSign(jiChangDomainAccount);
-                task.IsCompleted = true;
-                task.Message = msg;
+                task.Message = "Parameter参数映射对象失败";
+                return;
             }
-            else
-            {
-                task.Message = "参数错误";
-            }
+
+            var msg = await DoSign(jiChangDomainAccount);
+            task.IsCompleted = true;
+            task.Message = msg;
         }
 
         private async Task<string> DoSign(JiChangDomainAccount jiChangDomainAccount)

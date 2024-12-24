@@ -33,16 +33,15 @@ namespace MultipleSign.Sign
         {
             task.IsCompleted = false;
 
-            if (task.Parameter is QuarkConfModel quarkConfModel)
+            if (task.Parameter is not QuarkConfModel quarkConfModel)
             {
-                var msg = await DoSign(quarkConfModel);
-                task.IsCompleted = true;
-                task.Message = msg;
+                task.Message = "Parameter参数映射对象失败";
+                return;
             }
-            else
-            {
-                task.Message = "参数错误";
-            }
+
+            var msg = await DoSign(quarkConfModel);
+            task.IsCompleted = true;
+            task.Message = msg;
         }
 
         private async Task<string> DoSign(QuarkConfModel quarkConfModel)
@@ -142,7 +141,7 @@ namespace MultipleSign.Sign
             return jObject;
         }
 
-        private string ConvertBytes(long b)
+        private static string ConvertBytes(long b)
         {
             if (b <= 0)
                 return $"0 MB";
