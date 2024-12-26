@@ -19,7 +19,7 @@ namespace MultipleSign.Sign
                     {
                         TaskId = tasks.Count + 1,
                         Title = $"({idx})、{Util.DesensitizeStr(item)}",
-                        TaskItemEnum = TaskItemEnum.LinkAI,
+                        TaskItemEnum = TaskItem,
                         TaskItemSort = idx,
                         Parameter = item,
                     });

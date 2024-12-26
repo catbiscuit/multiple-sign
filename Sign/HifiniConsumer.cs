@@ -20,7 +20,7 @@ namespace MultipleSign.Sign
                     {
                         TaskId = tasks.Count + 1,
                         Title = $"({idx})、{Util.DesensitizeStr(item)}",
-                        TaskItemEnum = TaskItemEnum.Hifini,
+                        TaskItemEnum = TaskItem,
                         TaskItemSort = idx,
                         Parameter = item,
                     });

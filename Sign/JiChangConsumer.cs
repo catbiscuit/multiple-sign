@@ -32,7 +32,7 @@ namespace MultipleSign.Sign
                             {
                                 TaskId = tasks.Count + 1,
                                 Title = $"({domainIdx}){domain}-({idx}){Util.DesensitizeStr(item.Email)}",
-                                TaskItemEnum = TaskItemEnum.JiChang,
+                                TaskItemEnum = TaskItem,
                                 TaskItemSort = idx,
                                 Parameter = new JiChangDomainAccount
                                 {
