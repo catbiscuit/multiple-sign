@@ -38,6 +38,13 @@ namespace MultipleSign.Sign
                 return;
             }
 
+            if (yun139ConfModel.Ignore)
+            {
+                taskData.IsCompleted = false;
+                taskData.Message = "Ignore跳过";
+                return;
+            }
+
             await DoSign(taskData, yun139ConfModel, cancellationToken);
         }
 
@@ -258,7 +265,7 @@ namespace MultipleSign.Sign
     {
         public List<Yun139ConfModel> Accounts { get; set; }
     }
-    public class Yun139ConfModel
+    public class Yun139ConfModel : BaseConf
     {
         public string Token { get; set; }
         public string Phone { get; set; }

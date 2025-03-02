@@ -28,6 +28,9 @@ namespace MultipleSign.Sign
                         int idx = 1;
                         foreach (var item in confModel.Accounts)
                         {
+                            if (item.Ignore)
+                                continue;
+
                             tasks.Add(new TaskData()
                             {
                                 TaskId = tasks.Count + 1,
@@ -39,6 +42,7 @@ namespace MultipleSign.Sign
                                     Domain = confModel.Domain,
                                     Email = item.Email,
                                     Pwd = item.Pwd,
+                                    Ignore = item.Ignore,
                                 },
                             });
                             idx++;
@@ -55,6 +59,13 @@ namespace MultipleSign.Sign
             {
                 taskData.IsCompleted = false;
                 taskData.Message = "Parameter参数映射对象失败";
+                return;
+            }
+
+            if (jiChangDomainAccount.Ignore)
+            {
+                taskData.IsCompleted = false;
+                taskData.Message = "Ignore跳过";
                 return;
             }
 
@@ -123,12 +134,12 @@ namespace MultipleSign.Sign
         public string Domain { get; set; }
         public List<JiChangConfModelInfo> Accounts { get; set; }
     }
-    public class JiChangConfModelInfo
+    public class JiChangConfModelInfo : BaseConf
     {
         public string Email { get; set; }
         public string Pwd { get; set; }
     }
-    public class JiChangDomainAccount
+    public class JiChangDomainAccount : BaseConf
     {
         public string Domain { get; set; }
         public string Email { get; set; }

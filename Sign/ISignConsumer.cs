@@ -8,4 +8,12 @@
 
         Task Consumer(TaskData taskData, CancellationToken cancellationToken);
     }
+
+    public class BaseConf
+    {
+        /// <summary>
+        /// 是否忽略
+        /// </summary>
+        public bool Ignore { get; set; }
+    }
 }

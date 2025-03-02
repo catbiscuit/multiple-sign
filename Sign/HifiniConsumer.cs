@@ -14,12 +14,12 @@ namespace MultipleSign.Sign
             if (conf.HifiniConf != null && conf.HifiniConf.Cookies != null)
             {
                 int idx = 1;
-                foreach (var item in conf.HifiniConf.Cookies.Where(x => string.IsNullOrWhiteSpace(x) == false))
+                foreach (var item in conf.HifiniConf.Cookies.Where(x => string.IsNullOrWhiteSpace(x.Cookie) == false))
                 {
                     tasks.Add(new TaskData()
                     {
                         TaskId = tasks.Count + 1,
-                        Title = $"({idx})、{Util.DesensitizeStr(item)}",
+                        Title = $"({idx})、{Util.DesensitizeStr(item.Cookie)}",
                         TaskItemEnum = TaskItem,
                         TaskItemSort = idx,
                         Parameter = item,
@@ -31,19 +31,26 @@ namespace MultipleSign.Sign
 
         public async Task Consumer(TaskData taskData, CancellationToken cancellationToken)
         {
-            if (taskData.Parameter is not string cookie)
+            if (taskData.Parameter is not HifiniConfModel hifiniConfModel)
             {
                 taskData.IsCompleted = false;
                 taskData.Message = "Parameter参数映射对象失败";
                 return;
             }
 
-            await DoSign(taskData, cookie, cancellationToken);
+            if (hifiniConfModel.Ignore)
+            {
+                taskData.IsCompleted = false;
+                taskData.Message = "Ignore跳过";
+                return;
+            }
+
+            await DoSign(taskData, hifiniConfModel, cancellationToken);
         }
 
-        private async Task DoSign(TaskData taskData, string cookie, CancellationToken cancellationToken)
+        private async Task DoSign(TaskData taskData, HifiniConfModel hifiniConfModel, CancellationToken cancellationToken)
         {
-            var content = await SignV1(cookie, cancellationToken);
+            var content = await SignV1(hifiniConfModel.Cookie, cancellationToken);
             if (content.Contains("操作存在风险") && content.Contains("encryptedSign"))
             {
                 string sign = string.Empty;
@@ -67,7 +74,7 @@ namespace MultipleSign.Sign
 
                 await Task.Delay(3000, cancellationToken);
 
-                content = await SignV2(cookie, sign, cancellationToken);
+                content = await SignV2(hifiniConfModel.Cookie, sign, cancellationToken);
 
                 taskData.IsCompleted = true;
                 taskData.Message = GetMessage(content);
@@ -96,7 +103,7 @@ namespace MultipleSign.Sign
 
                 await Task.Delay(3000, cancellationToken);
 
-                content = await SignV3(cookie, sign, cancellationToken);
+                content = await SignV3(hifiniConfModel.Cookie, sign, cancellationToken);
 
                 taskData.IsCompleted = true;
                 taskData.Message = GetMessage(content);
@@ -270,6 +277,10 @@ namespace MultipleSign.Sign
 
     public class HifiniConf
     {
-        public List<string> Cookies { get; set; }
+        public List<HifiniConfModel> Cookies { get; set; }
+    }
+    public class HifiniConfModel : BaseConf
+    {
+        public string Cookie { get; set; }
     }
 }

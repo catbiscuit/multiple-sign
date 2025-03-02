@@ -38,6 +38,13 @@ namespace MultipleSign.Sign
                 return;
             }
 
+            if (quarkConfModel.Ignore)
+            {
+                taskData.IsCompleted = false;
+                taskData.Message = "Ignore跳过";
+                return;
+            }
+
             await DoSign(taskData, quarkConfModel, cancellationToken);
         }
 
@@ -177,7 +184,7 @@ namespace MultipleSign.Sign
     {
         public List<QuarkConfModel> Accounts { get; set; }
     }
-    public class QuarkConfModel
+    public class QuarkConfModel : BaseConf
     {
         public string User { get; set; }
         public string Kps { get; set; }

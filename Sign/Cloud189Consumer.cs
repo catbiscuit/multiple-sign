@@ -39,6 +39,13 @@ namespace MultipleSign.Sign
                 return;
             }
 
+            if (cloud189ConfModel.Ignore)
+            {
+                taskData.IsCompleted = false;
+                taskData.Message = "Ignore跳过";
+                return;
+            }
+
             await DoSign(taskData, cloud189ConfModel, cancellationToken);
         }
 
@@ -615,7 +622,7 @@ namespace MultipleSign.Sign
     {
         public List<Cloud189ConfModel> Accounts { get; set; }
     }
-    public class Cloud189ConfModel
+    public class Cloud189ConfModel : BaseConf
     {
         public string User { get; set; }
         public string Pwd { get; set; }

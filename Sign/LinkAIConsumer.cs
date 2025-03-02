@@ -13,12 +13,12 @@ namespace MultipleSign.Sign
             if (conf.LinkAIConf != null && conf.LinkAIConf.Authorizations != null)
             {
                 int idx = 1;
-                foreach (var item in conf.LinkAIConf.Authorizations.Where(x => string.IsNullOrWhiteSpace(x) == false))
+                foreach (var item in conf.LinkAIConf.Authorizations.Where(x => string.IsNullOrWhiteSpace(x.Authorization) == false))
                 {
                     tasks.Add(new TaskData()
                     {
                         TaskId = tasks.Count + 1,
-                        Title = $"({idx})、{Util.DesensitizeStr(item)}",
+                        Title = $"({idx})、{Util.DesensitizeStr(item.Authorization)}",
                         TaskItemEnum = TaskItem,
                         TaskItemSort = idx,
                         Parameter = item,
@@ -30,19 +30,26 @@ namespace MultipleSign.Sign
 
         public async Task Consumer(TaskData taskData, CancellationToken cancellationToken)
         {
-            if (taskData.Parameter is not string token)
+            if (taskData.Parameter is not LinkAIConfModel linkAIConfModel)
             {
                 taskData.IsCompleted = false;
                 taskData.Message = "Parameter参数映射对象失败";
                 return;
             }
 
-            await DoSign(taskData, token, cancellationToken);
+            if (linkAIConfModel.Ignore)
+            {
+                taskData.IsCompleted = false;
+                taskData.Message = "Ignore跳过";
+                return;
+            }
+
+            await DoSign(taskData, linkAIConfModel, cancellationToken);
         }
 
-        private async Task DoSign(TaskData taskData, string token, CancellationToken cancellationToken)
+        private async Task DoSign(TaskData taskData, LinkAIConfModel linkAIConfModel, CancellationToken cancellationToken)
         {
-            string[] parts = token.Split('.');
+            string[] parts = linkAIConfModel.Authorization.Split('.');
             if (parts.Length != 3)
             {
                 taskData.IsCompleted = false;
@@ -71,7 +78,7 @@ namespace MultipleSign.Sign
             var url = "https://link-ai.tech/api/chat/web/app/user/sign/in";
             Dictionary<string, string> headers = new()
             {
-                { "Authorization", "Bearer " + token },
+                { "Authorization", "Bearer " + linkAIConfModel.Authorization },
                 { "User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36" },
                 { "X-Forwarded-For", Util.GetFakeIP() },
             };
@@ -124,6 +131,10 @@ namespace MultipleSign.Sign
 
     public class LinkAIConf
     {
-        public List<string> Authorizations { get; set; }
+        public List<LinkAIConfModel> Authorizations { get; set; }
+    }
+    public class LinkAIConfModel : BaseConf
+    {
+        public string Authorization { get; set; }
     }
 }

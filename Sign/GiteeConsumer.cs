@@ -38,6 +38,13 @@ namespace MultipleSign.Sign
                 return;
             }
 
+            if (giteeConfModel.Ignore)
+            {
+                taskData.IsCompleted = false;
+                taskData.Message = "Ignore跳过";
+                return;
+            }
+
             await DoSign(taskData, giteeConfModel, cancellationToken);
         }
 
@@ -121,7 +128,7 @@ namespace MultipleSign.Sign
     {
         public List<GiteeConfModel> Accounts { get; set; }
     }
-    public class GiteeConfModel
+    public class GiteeConfModel : BaseConf
     {
         public string AccessToken { get; set; }
         public string Owner { get; set; }
