@@ -28,9 +28,6 @@ namespace MultipleSign.Sign
                         int idx = 1;
                         foreach (var item in confModel.Accounts)
                         {
-                            if (item.Ignore)
-                                continue;
-
                             tasks.Add(new TaskData()
                             {
                                 TaskId = tasks.Count + 1,
