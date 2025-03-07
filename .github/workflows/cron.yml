@@ -1,0 +1,24 @@
+name: RandomCron
+on:
+  schedule:
+    - cron: '5 19 * * *'
+  workflow_dispatch:
+
+jobs:
+  repo-sync:
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          token: ${{ secrets.PAT }}
+          
+      - name: random cron
+        run: |
+          sed -i -E "s/(- cron: ')([^[:space:]]+)( [^[:space:]]+)( \* \* \*')/\1$(($RANDOM % 40 + 10)) $(($RANDOM % 2 + 22))\4/g" .github/workflows/run.yml
+          git config user.name github-actions
+          git config user.email github-actions@users.noreply.github.com
+          git add .
+          current=`TZ=Asia/Shanghai date '+%Y-%m-%d %H:%M:%S'`
+          git commit -m "[${current}] random cron trigger by ${{ github.event_name }}"
+          git push origin main
