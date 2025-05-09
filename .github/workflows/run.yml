@@ -1,7 +1,7 @@
 name: MultipleSign
 on:
   schedule:
-    - cron: '40 23 * * *'
+    - cron: '35 23 * * *'
   workflow_dispatch:
 
 jobs:
